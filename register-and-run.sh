@@ -3,7 +3,7 @@ set -e
 
 trap "exit 1" SIGINT SIGTERM
 
-IP=$(getent hosts rancher-server | awk '{ print $1 }')
+IP=$(getent hosts server | awk '{ print $1 }')
 echo "IP: $IP"
 
 if test -z "${IP}"; then
