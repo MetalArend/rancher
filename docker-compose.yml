@@ -1,0 +1,29 @@
+version: '2'
+
+services:
+
+  rancher-server: # TODO rename to server
+    image: rancher/server:v1.1.0
+    ports:
+      - "8080:8080"
+#    volumes:
+#      - "./log:/var/log/rancher" # TODO add logs
+#    networks:
+#      rancher:
+
+  rancher-agent: # TODO rename to agent
+    image: rancher/agent:v1.0.2
+    depends_on:
+      - rancher-server
+    privileged: true
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/var/lib/rancher:/var/lib/rancher"
+      - "./register-and-run.sh:/register-and-run.sh"
+#      - "./log:/var/log/rancher" # TODO add logs
+    entrypoint: "/bin/bash /register-and-run.sh"
+#    networks:
+#      rancher:
+
+#networks:
+#  rancher:
