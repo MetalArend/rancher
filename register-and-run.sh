@@ -32,7 +32,14 @@ else
 fi
 sleep 1
 
-TOKEN_URL="http://${IP}:8080/v1/projects/1a5/registrationTokens"
+PROJECT_URL="http://${IP}:8080/v1/projects"
+echo "Project URL: ${PROJECT_URL}"
+
+PROJECT_JSON=$(curl -sS "${PROJECT_URL}" --header "Content-Type:application/json")
+echo "Project response:"
+echo "${PROJECT_JSON}" | python -m json.tool
+
+TOKEN_URL=$(echo "${PROJECT_JSON}" | python -c 'import json,sys; print json.load(sys.stdin)["data"][0]["links"]["registrationTokens"]')
 echo "Token URL: ${TOKEN_URL}"
 
 TOKEN_JSON=$(curl -sS -X POST "http://${IP}:8080/v1/projects/1a5/registrationTokens" --header "Content-Type:application/json")
