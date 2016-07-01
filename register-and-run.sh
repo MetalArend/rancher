@@ -3,51 +3,58 @@ set -e
 
 trap "exit 1" SIGINT SIGTERM
 
+
+echo -e "\033[33mStarting host registration\033[0m"
+echo "Environment:"
+printenv
+
+echo -e "\033[33mResolving the server name\033[0m"
 IP=$(getent hosts server | awk '{ print $1 }')
-echo "IP: $IP"
-
 if test -z "${IP}"; then
-    echo -e "\e[31mServer not found\e[0m"
+    echo -e "\033[1;31;47mServer not found\033[0m"
     exit 1
-else
-    TIME_BEGIN=$(date +%s)
-    MAX_FAILS=15
-    SLEEP=10
-    FAILS=0
-    while true; do
-        if ! nc -z -w 1 ${IP} 8080; then
-            FAILS=$[FAILS + 1]
-            if test ${FAILS} -gt ${MAX_FAILS}; then
-                echo -e "Server boot failed (timeout)"
-                exit 1
-            fi
-            TIME_PASSED="$[$(date +%s) - $TIME_BEGIN]"
-            echo -e "Waiting for server boot... | ${TIME_PASSED}s (${FAILS}/${MAX_FAILS})"
-            sleep ${SLEEP}
-            continue
-        fi
-        echo -e "Server booted"
-        break
-    done
 fi
-sleep 1
+echo "Server name resolved to ${IP}"
 
+echo -e "\033[33mWaiting for the server to boot\033[0m"
+TIME_BEGIN=$(date +%s)
+MAX_FAILS=120
+SLEEP=1
+FAILS=0
+while true; do
+    if ! nc -z -w 1 ${IP} 8080; then
+        FAILS=$[FAILS + 1]
+        if test ${FAILS} -gt ${MAX_FAILS}; then
+            echo -e "\033[1;31;47mServer boot took too long (timeout)\033[0m"
+            exit 1
+        fi
+        TIME_PASSED="$[$(date +%s) - $TIME_BEGIN]"
+        echo -e "\033[2m${TIME_PASSED}s\033[0m"
+        sleep ${SLEEP}
+        continue
+    fi
+    break
+done
+TIME_PASSED="$[$(date +%s) - $TIME_BEGIN]"
+echo "Server ready after ${TIME_PASSED} seconds"
+
+echo -e "\033[33mAsking the server API for the default Rancher project\033[0m"
 PROJECT_URL="http://${IP}:8080/v1/projects"
-echo "Project URL: ${PROJECT_URL}"
-
+echo "GET ${PROJECT_URL}"
 PROJECT_JSON=$(curl -sS "${PROJECT_URL}" --header "Content-Type:application/json")
-echo "Project response:"
+echo "Response:"
 echo "${PROJECT_JSON}" | python -m json.tool
 
+echo -e "\033[33mAsking the server API for a new registration token\033[0m"
 TOKEN_URL=$(echo "${PROJECT_JSON}" | python -c 'import json,sys; print json.load(sys.stdin)["data"][0]["links"]["registrationTokens"]')
-echo "Token URL: ${TOKEN_URL}"
-
-TOKEN_JSON=$(curl -sS -X POST "http://${IP}:8080/v1/projects/1a5/registrationTokens" --header "Content-Type:application/json")
-echo "Token response:"
+echo "POST ${TOKEN_URL}"
+TOKEN_JSON=$(curl -sS -X POST "${TOKEN_URL}" --header "Content-Type:application/json")
+echo "Response:"
 echo "${TOKEN_JSON}" | python -m json.tool
 
+echo -e "\033[33mAsking the server API to activate our token\033[0m"
 ACTIVATION_URL=$(echo "${TOKEN_JSON}" | python -c 'import json,sys; print json.load(sys.stdin)["actions"]["activate"]')
-echo "Activation URL: ${ACTIVATION_URL}"
+echo "GET ${ACTIVATION_URL}"
 
 TIME_BEGIN=$(date +%s)
 MAX_FAILS=15
@@ -59,21 +66,21 @@ while true; do
     if test "active" != "${STATE}"; then
         FAILS=$[FAILS + 1]
         if test ${FAILS} -gt ${MAX_FAILS}; then
-            echo -e "Host activation failed (timeout)"
+            echo -e "\033[1;31;47mActivation failed (timeout)\033[0m"
             exit 1
         fi
         TIME_PASSED="$[$(date +%s) - $TIME_BEGIN]"
-        echo -e "Waiting for host activation... | ${TIME_PASSED}s (${FAILS}/${MAX_FAILS})"
+        echo -e "\033[2m${TIME_PASSED}s\033[0m"
         sleep ${SLEEP}
         continue
     fi
     break
 done
-
-echo "Activation response:"
+echo "Response:"
 echo "${ACTIVATION_JSON}" | python -m json.tool
 
+echo -e "\033[33mGiving the registration url to the original run.sh script\033[0m"
 REGISTRATION_URL=$(echo "${ACTIVATION_JSON}" | python -c 'import json,sys; print json.load(sys.stdin)["registrationUrl"]')
-echo "Registration URL: ${REGISTRATION_URL}"
+echo "/bin/bash /run.sh ${REGISTRATION_URL}"
 
 bash /run.sh "${REGISTRATION_URL}"
