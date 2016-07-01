@@ -3,6 +3,10 @@ set -e
 
 trap "exit 1" SIGINT SIGTERM
 
+if test -z "${RANCHER_AGENT_IMAGE}"; then
+    echo -e "\033[1;31;47mThis script will be called from within the agent to register to the server. Please don't call it on your host machine.\033[0m"
+    exit 1
+fi
 
 echo -e "\033[33mStarting host registration\033[0m"
 echo "Environment:"
