@@ -58,17 +58,17 @@ PROJECT_URL="http://${HOST_IP}:8080/v1/projects"
 echo "GET ${PROJECT_URL}"
 PROJECT_JSON=$(curl -sS "${PROJECT_URL}" --header "Content-Type:application/json")
 echo "Response:"
-echo "${PROJECT_JSON}" | python -m json.tool
+echo "${PROJECT_JSON}" | jq '.'
 
 echo -e "\033[33mAsking the server API for a new registration token\033[0m"
-TOKEN_URL=$(echo "${PROJECT_JSON}" | python -c 'import json,sys; print json.load(sys.stdin)["data"][0]["links"]["registrationTokens"]')
+TOKEN_URL=$(echo "${PROJECT_JSON}" | jq -r '.data[0].links.registrationTokens')
 echo "POST ${TOKEN_URL}"
 TOKEN_JSON=$(curl -sS -X POST "${TOKEN_URL}" --header "Content-Type:application/json")
 echo "Response:"
-echo "${TOKEN_JSON}" | python -m json.tool
+echo "${TOKEN_JSON}" | jq '.'
 
 echo -e "\033[33mAsking the server API to activate our token\033[0m"
-ACTIVATION_URL=$(echo "${TOKEN_JSON}" | python -c 'import json,sys; print json.load(sys.stdin)["actions"]["activate"]')
+ACTIVATION_URL=$(echo "${TOKEN_JSON}" | jq -r '.actions.activate')
 echo "GET ${ACTIVATION_URL}"
 
 TIME_BEGIN=$(date +%s)
@@ -77,7 +77,7 @@ SLEEP=1
 FAILS=0
 while true; do
     ACTIVATION_JSON=$(curl -sS "${ACTIVATION_URL}" --header "Content-Type:application/json")
-    STATE=$(echo "${ACTIVATION_JSON}" | python -c 'import json,sys; print json.load(sys.stdin)["state"]')
+    STATE=$(echo "${ACTIVATION_JSON}" | jq -r '.state')
     if test "active" != "${STATE}"; then
         FAILS=$[FAILS + 1]
         if test ${FAILS} -gt ${MAX_FAILS}; then
@@ -92,10 +92,10 @@ while true; do
     break
 done
 echo "Response:"
-echo "${ACTIVATION_JSON}" | python -m json.tool
+echo "${ACTIVATION_JSON}" | jq '.'
 
 echo -e "\033[33mGiving the registration url to the original run.sh script\033[0m"
-REGISTRATION_URL=$(echo "${ACTIVATION_JSON}" | python -c 'import json,sys; print json.load(sys.stdin)["registrationUrl"]')
+REGISTRATION_URL=$(echo "${ACTIVATION_JSON}" | jq -r '.registrationUrl')
 echo "/bin/bash /run.sh ${REGISTRATION_URL}"
 
 bash /run.sh "${REGISTRATION_URL}"
