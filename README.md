@@ -1,5 +1,11 @@
 #Run Rancher from a docker-compose file
 
+##Rancher
+
+- From http://rancher.com/ :
+    
+    "From the ground up, Rancher was designed to solve all of the critical challenges necessary to run all of your applications in containers. Rancher provides a full set of infrastructure services for containers, including networking, storage services, host management, load balancing and more. All of these services work across any infrastructure, and make it simple to reliably deploy and manage applications."
+
 ##Requirements
 
 - Currently only tested on my development machine.
