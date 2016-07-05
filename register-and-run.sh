@@ -70,7 +70,6 @@ echo "${TOKEN_JSON}" | jq -C '.'
 echo -e "\033[33mAsking the server API to activate our token\033[0m"
 ACTIVATION_URL=$(echo "${TOKEN_JSON}" | jq -r '.actions.activate')
 echo "GET ${ACTIVATION_URL}"
-sleep 1 # should be almost instantly
 TIME_BEGIN=$(date +%s)
 MAX_FAILS=15
 SLEEP=1
@@ -85,7 +84,6 @@ while true; do
             exit 1
         fi
         TIME_PASSED="$[$(date +%s) - $TIME_BEGIN]"
-        echo -e "\033[2m${TIME_PASSED}s\033[0m"
         sleep ${SLEEP}
         continue
     fi
