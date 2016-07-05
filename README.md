@@ -26,12 +26,12 @@
 
 ##Roadmap
 
+- enable secure connections (and make logs and graphs accessible again?)
 - add container names
     - adding container_name disables the network domain names for the container
     - adding container name rancher-agent removes the newly started rancher-agent
 - add logging: /var/lib/cattle/logs
 - move /var/lib/rancher to other cached location?
-- enable secure connections
 - check why rancher-helper is relaunching another instance of rancher/agent
 
 ##Watched docker issues
