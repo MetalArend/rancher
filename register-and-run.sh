@@ -58,14 +58,14 @@ PROJECT_URL="http://${HOST_IP}:8080/v1/projects"
 echo "GET ${PROJECT_URL}"
 PROJECT_JSON=$(curl -sS "${PROJECT_URL}" --header "Content-Type:application/json")
 echo "Response:"
-echo "${PROJECT_JSON}" | jq '.'
+echo "${PROJECT_JSON}" | jq -C '.'
 
 echo -e "\033[33mAsking the server API for a new registration token\033[0m"
 TOKEN_URL=$(echo "${PROJECT_JSON}" | jq -r '.data[0].links.registrationTokens')
 echo "POST ${TOKEN_URL}"
 TOKEN_JSON=$(curl -sS -X POST "${TOKEN_URL}" --header "Content-Type:application/json")
 echo "Response:"
-echo "${TOKEN_JSON}" | jq '.'
+echo "${TOKEN_JSON}" | jq -C '.'
 
 echo -e "\033[33mAsking the server API to activate our token\033[0m"
 ACTIVATION_URL=$(echo "${TOKEN_JSON}" | jq -r '.actions.activate')
@@ -92,7 +92,7 @@ while true; do
     break
 done
 echo "Response:"
-echo "${ACTIVATION_JSON}" | jq '.'
+echo "${ACTIVATION_JSON}" | jq -C '.'
 
 echo -e "\033[33mGiving the registration url to the original run.sh script\033[0m"
 REGISTRATION_URL=$(echo "${ACTIVATION_JSON}" | jq -r '.registrationUrl')
