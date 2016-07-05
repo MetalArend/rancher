@@ -2,7 +2,7 @@ version: '2'
 
 services:
 
-  server:
+  rancher-server:
     image: rancher/server:v1.1.0
     ports:
       - "8080:8080"
@@ -11,10 +11,10 @@ services:
 #    networks:
 #      rancher:
 
-  agent:
+  rancher-helper:
     image: rancher/agent:v1.0.2
     depends_on:
-      - server
+      - rancher-server
     privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
