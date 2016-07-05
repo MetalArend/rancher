@@ -10,7 +10,7 @@
 
 - Currently only tested on my development machine.
     - Mac OS X El Caption 10.11
-    - Docker for Mac 1.12.0-rc2-beta17
+    - Docker for Mac 1.12.0-rc2-beta18: https://docs.docker.com/docker-for-mac/
 
 ##Usage
 
