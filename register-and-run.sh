@@ -8,9 +8,11 @@ if test -z "${RANCHER_AGENT_IMAGE}"; then
     exit 1
 fi
 
-echo -e "\033[33mStarting host registration\033[0m"
+echo -e "\033[33mInspecting system\033[0m"
 echo "Environment:"
 printenv
+echo "Hosts:"
+getent hosts
 
 echo -e "\033[33mResolving the server name\033[0m"
 IP=$(getent hosts server | awk '{ print $1 }')
