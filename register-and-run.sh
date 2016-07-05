@@ -14,13 +14,22 @@ printenv
 echo "Hosts:"
 getent hosts
 
-echo -e "\033[33mResolving the server name\033[0m"
-IP=$(getent hosts server | awk '{ print $1 }')
-if test -z "${IP}"; then
+echo -e "\033[33mDetecting host\033[0m"
+#HOST_IP=$(getent hosts dockerhost | awk '{ print $1 }')
+HOST_IP=$(netstat -nr | grep '^0\.0\.0\.0' | awk '{print $2}')
+if test -z "${HOST_IP}"; then
+    echo -e "\033[1;31;47mHost detection failed\033[0m"
+    exit 1
+fi
+echo "Host IP address: ${HOST_IP}"
+
+echo -e "\033[33mResolving server name\033[0m"
+SERVER_IP=$(getent hosts rancher-server | awk '{ print $1 }')
+if test -z "${SERVER_IP}"; then
     echo -e "\033[1;31;47mServer not found\033[0m"
     exit 1
 fi
-echo "Server name resolved to ${IP}"
+echo "Server IP address: ${SERVER_IP}"
 
 echo -e "\033[33mWaiting for the server to boot\033[0m"
 TIME_BEGIN=$(date +%s)
@@ -28,7 +37,7 @@ MAX_FAILS=120
 SLEEP=1
 FAILS=0
 while true; do
-    if ! nc -z -w 1 ${IP} 8080; then
+    if ! nc -z -w 1 ${SERVER_IP} 8080; then
         FAILS=$[FAILS + 1]
         if test ${FAILS} -gt ${MAX_FAILS}; then
             echo -e "\033[1;31;47mServer boot took too long (timeout)\033[0m"
@@ -45,7 +54,7 @@ TIME_PASSED="$[$(date +%s) - $TIME_BEGIN]"
 echo "Server ready after ${TIME_PASSED} seconds"
 
 echo -e "\033[33mAsking the server API for the default Rancher project\033[0m"
-PROJECT_URL="http://${IP}:8080/v1/projects"
+PROJECT_URL="http://${HOST_IP}:8080/v1/projects"
 echo "GET ${PROJECT_URL}"
 PROJECT_JSON=$(curl -sS "${PROJECT_URL}" --header "Content-Type:application/json")
 echo "Response:"
